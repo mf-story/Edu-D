@@ -136,7 +136,8 @@ app.use((req, res, next) => {
       "media-src 'self' blob: https:",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self'",
+      // Build produksi (plugin legacy) menyisipkan skrip bootstrap inline.
+      "script-src 'self' 'unsafe-inline'",
       "connect-src 'self'",
       "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com",
     ].join("; ")
