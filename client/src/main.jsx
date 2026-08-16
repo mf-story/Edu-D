@@ -15,10 +15,16 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-// Daftarkan service worker untuk dukungan PWA (installable & offline dasar).
+// Service worker dinonaktifkan sementara: hapus registrasi & cache lama agar
+// pengguna tidak terjebak versi usang. (PWA/SW akan dipasang lagi nanti.)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
-  })
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((regs) => regs.forEach((r) => r.unregister()))
+    .catch(() => {})
 }
+if (window.caches) {
+  caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {})
+}
+
 
