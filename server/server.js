@@ -108,11 +108,22 @@ function isAllowedOrigin(origin) {
 }
 
 app.use(
-  cors({
-    origin: (origin, cb) =>
-      isAllowedOrigin(origin)
-        ? cb(null, true)
-        : cb(new Error("Origin tidak diizinkan")),
+  cors((req, callback) => {
+    const origin = req.header("Origin");
+    let allowed = isAllowedOrigin(origin);
+    // Izinkan permintaan same-origin (Origin sama dengan Host server) — mis.
+    // aset build modern yang memakai atribut crossorigin pada IP/domain publik.
+    if (!allowed && origin) {
+      const host = req.header("Host");
+      try {
+        allowed = !!host && new URL(origin).host === host;
+      } catch {
+        allowed = false;
+      }
+    }
+    // Jangan lempar error: cukup tidak menambahkan header CORS bila tak diizinkan
+    // (browser yang akan memblokir; permintaan same-origin tetap jalan).
+    callback(null, { origin: allowed });
   })
 );
 
