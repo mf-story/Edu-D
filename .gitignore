@@ -13,6 +13,7 @@ server/uploads/
 .env
 .env.*
 !.env.example
+.edumuh_secret
 
 # Log
 *.log

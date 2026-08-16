@@ -1,0 +1,2 @@
+# Pastikan skrip shell selalu memakai akhir baris LF (agar jalan di Linux/VPS).
+*.sh text eol=lf
