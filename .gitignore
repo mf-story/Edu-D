@@ -1,0 +1,24 @@
+# Dependensi
+node_modules/
+**/node_modules/
+
+# Build produksi frontend (dihasilkan ulang via `npm run build`)
+client/dist/
+
+# Data runtime & unggahan (dihasilkan server / seed di masing-masing lingkungan)
+server/data/
+server/uploads/
+
+# Variabel lingkungan / rahasia
+.env
+.env.*
+!.env.example
+
+# Log
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
