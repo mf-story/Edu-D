@@ -1,4 +1,4 @@
-# EduMuh — Aplikasi Belajar Mengajar
+# Edu-D — Aplikasi Belajar Mengajar
 
 Aplikasi belajar mengajar dengan **3 peran**:
 
@@ -22,7 +22,7 @@ Tampilan menggunakan tema **modern & colorful** (gradien indigo–ungu–merah m
 
 ## Struktur
 ```
-EduMuh/
+Edu-D/
   server/     API + penyimpanan JSON (folder data/ & uploads/ dibuat otomatis)
   client/     Aplikasi React (Vite)
 ```
