@@ -1,4 +1,4 @@
-// Logo.jsx — Logo aplikasi EduMuh (topi wisuda modern dengan gradient).
+// Logo.jsx — Logo aplikasi Edu-D (topi wisuda modern dengan gradient).
 export default function Logo({ size = 32, className = "" }) {
   return (
     <svg

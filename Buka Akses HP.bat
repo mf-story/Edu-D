@@ -1,5 +1,5 @@
 @echo off
-title EduMuh - Buka Akses HP
+title Edu-D - Buka Akses HP
 REM Minta izin administrator (UAC) secara otomatis
 net session >nul 2>&1
 if %errorlevel% neq 0 (
@@ -9,15 +9,15 @@ if %errorlevel% neq 0 (
 )
 
 echo ============================================================
-echo   EduMuh - Mengizinkan akses dari HP / Smart TV
+echo   Edu-D - Mengizinkan akses dari HP / Smart TV
 echo ============================================================
 echo.
 
 REM Hapus aturan lama jika ada, lalu buat aturan baru
-netsh advfirewall firewall delete rule name="EduMuh Vite 5173" >nul 2>&1
-netsh advfirewall firewall add rule name="EduMuh Vite 5173" dir=in action=allow protocol=TCP localport=5173
-netsh advfirewall firewall delete rule name="EduMuh Server 4000" >nul 2>&1
-netsh advfirewall firewall add rule name="EduMuh Server 4000" dir=in action=allow protocol=TCP localport=4000
+netsh advfirewall firewall delete rule name="Edu-D Vite 5173" >nul 2>&1
+netsh advfirewall firewall add rule name="Edu-D Vite 5173" dir=in action=allow protocol=TCP localport=5173
+netsh advfirewall firewall delete rule name="Edu-D Server 4000" >nul 2>&1
+netsh advfirewall firewall add rule name="Edu-D Server 4000" dir=in action=allow protocol=TCP localport=4000
 
 echo.
 echo Selesai! Akses dari HP / Smart TV sudah diizinkan.

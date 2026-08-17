@@ -50,9 +50,9 @@ export default function StudentDashboard() {
       if (detail && detail.subjectId) setNavTarget(detail);
     };
     try {
-      const raw = sessionStorage.getItem("edumuh_notif_target");
+      const raw = sessionStorage.getItem("edud_notif_target");
       if (raw) {
-        sessionStorage.removeItem("edumuh_notif_target");
+        sessionStorage.removeItem("edud_notif_target");
         apply(JSON.parse(raw));
       }
     } catch {
@@ -60,14 +60,14 @@ export default function StudentDashboard() {
     }
     const onNav = (e) => {
       try {
-        sessionStorage.removeItem("edumuh_notif_target");
+        sessionStorage.removeItem("edud_notif_target");
       } catch {
         /* abaikan */
       }
       apply(e.detail);
     };
-    window.addEventListener("edumuh:notif-nav", onNav);
-    return () => window.removeEventListener("edumuh:notif-nav", onNav);
+    window.addEventListener("edud:notif-nav", onNav);
+    return () => window.removeEventListener("edud:notif-nav", onNav);
   }, []);
 
   // Daftar periode unik yang dimiliki siswa (untuk pemilih riwayat).

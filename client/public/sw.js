@@ -1,7 +1,7 @@
-// Service worker EduMuh — mendukung PWA (installable) & offline dasar.
+// Service worker Edu-D — mendukung PWA (installable) & offline dasar.
 // Strategi: network-first untuk navigasi (agar selalu versi terbaru),
 // cache-first untuk aset statis. API & uploads TIDAK di-cache.
-const CACHE = "edumuh-v1";
+const CACHE = "edud-v1";
 const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon-192.png"];
 
 self.addEventListener("install", (event) => {

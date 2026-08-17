@@ -8,7 +8,7 @@ set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- Backend (port 4000) ---
-echo "Menyiapkan backend EduMuh (port 4000)..."
+echo "Menyiapkan backend Edu-D (port 4000)..."
 cd "$ROOT/server"
 [ -d node_modules ] || npm install
 [ -d data ] || npm run seed
@@ -21,7 +21,7 @@ trap 'echo "Menghentikan backend..."; kill $BACKEND_PID 2>/dev/null' EXIT
 sleep 2
 
 # --- Frontend (port 5173) ---
-echo "Menjalankan frontend EduMuh (port 5173)..."
+echo "Menjalankan frontend Edu-D (port 5173)..."
 cd "$ROOT/client"
 [ -d node_modules ] || npm install
 echo ""

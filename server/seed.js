@@ -29,7 +29,7 @@ const siswa = createUser("siswa", "siswa123", "Ani Pelajar", "student");
 if (db.all("classes").length === 0) {
   const cls = db.insert("classes", {
     name: "Kelas 7A",
-    description: "Rombongan belajar contoh untuk demonstrasi EduMuh.",
+    description: "Rombongan belajar contoh untuk demonstrasi Edu-D.",
     studentIds: [siswa.id],
   });
   db.insert("schedules", {

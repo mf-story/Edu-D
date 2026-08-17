@@ -1,9 +1,9 @@
 // =====================================================================
-// api.js — Pembungkus fetch untuk memanggil API EduMuh.
+// api.js — Pembungkus fetch untuk memanggil API Edu-D.
 // Menyisipkan token Bearer secara otomatis dari localStorage.
 // =====================================================================
 
-const TOKEN_KEY = "edumuh_token";
+const TOKEN_KEY = "edud_token";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);

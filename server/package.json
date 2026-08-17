@@ -1,7 +1,7 @@
 {
-  "name": "edumuh-server",
+  "name": "edu-d-server",
   "version": "1.0.0",
-  "description": "Backend EduMuh - aplikasi belajar mengajar (admin, pengajar, pelajar)",
+  "description": "Backend Edu-D - aplikasi belajar mengajar (admin, pengajar, pelajar)",
   "type": "commonjs",
   "main": "server.js",
   "scripts": {

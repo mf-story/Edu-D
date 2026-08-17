@@ -74,7 +74,7 @@ powershell -ExecutionPolicy Bypass -File .\start-dev.ps1
 | Pelajar | `siswa` | `siswa123` |
 
 > Ganti kata sandi setelah login pertama. Untuk produksi, atur variabel
-> lingkungan `EDUMUH_SECRET` (kunci tanda tangan token) pada server.
+> lingkungan `EDUD_SECRET` (kunci tanda tangan token) pada server.
 
 ## Build produksi frontend
 ```powershell

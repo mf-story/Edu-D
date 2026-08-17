@@ -9,11 +9,11 @@ const fs = require("fs");
 const path = require("path");
 
 // Kunci rahasia untuk menandatangani token.
-// Prioritas: variabel lingkungan EDUMUH_SECRET > berkas .secret (dibuat
+// Prioritas: variabel lingkungan EDUD_SECRET > berkas .secret (dibuat
 // otomatis & persisten) > nilai acak sementara. Ini menghindari kunci default
 // lemah yang bisa ditebak untuk memalsukan token.
 function loadSecret() {
-  const fromEnv = process.env.EDUMUH_SECRET;
+  const fromEnv = process.env.EDUD_SECRET;
   if (fromEnv && fromEnv.length >= 16) return fromEnv;
   const secretFile = path.join(__dirname, ".secret");
   try {

@@ -5,7 +5,7 @@
 # =====================================================================
 $root = $PSScriptRoot
 
-Write-Host "Menjalankan backend EduMuh (port 4000)..." -ForegroundColor Cyan
+Write-Host "Menjalankan backend Edu-D (port 4000)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList @(
   "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
   "cd '$root\server'; if (-not (Test-Path node_modules)) { npm.cmd install }; if (-not (Test-Path data)) { npm.cmd run seed }; npm.cmd start"
@@ -13,7 +13,7 @@ Start-Process powershell -ArgumentList @(
 
 Start-Sleep -Seconds 2
 
-Write-Host "Menjalankan frontend EduMuh (port 5173)..." -ForegroundColor Cyan
+Write-Host "Menjalankan frontend Edu-D (port 5173)..." -ForegroundColor Cyan
 Start-Process powershell -ArgumentList @(
   "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
   "cd '$root\client'; if (-not (Test-Path node_modules)) { npm.cmd install }; npm.cmd run dev"

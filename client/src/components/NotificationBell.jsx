@@ -111,14 +111,14 @@ export default function NotificationBell() {
         tab,
       };
       try {
-        sessionStorage.setItem("edumuh_notif_target", JSON.stringify(target));
+        sessionStorage.setItem("edud_notif_target", JSON.stringify(target));
       } catch {
         /* abaikan */
       }
       navigate(DASH_PATH[user?.role] || "/");
       // Bila dasbor sudah termuat (tanpa remount), terapkan segera.
       window.dispatchEvent(
-        new CustomEvent("edumuh:notif-nav", { detail: target })
+        new CustomEvent("edud:notif-nav", { detail: target })
       );
     }
     setOpen(false);

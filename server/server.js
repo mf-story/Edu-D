@@ -1,5 +1,5 @@
 /* =====================================================================
- * server.js — API EduMuh (Express).
+ * server.js — API Edu-D (Express).
  * Peran: admin, teacher (pengajar), student (pelajar).
  *
  * Menjalankan:  npm install && npm run seed && npm start
@@ -82,9 +82,9 @@ const app = express();
 app.disable("x-powered-by");
 
 /* ---------------- Keamanan: CORS allowlist ---------------- */
-// Origin yang diizinkan. Selain env EDUMUH_ORIGINS (dipisah koma), otomatis
+// Origin yang diizinkan. Selain env EDUD_ORIGINS (dipisah koma), otomatis
 // mengizinkan localhost & jaringan lokal (LAN) — memblokir origin internet acak.
-const ORIGIN_ALLOWLIST = (process.env.EDUMUH_ORIGINS || "")
+const ORIGIN_ALLOWLIST = (process.env.EDUD_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -5595,5 +5595,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`EduMuh API berjalan di http://localhost:${PORT}`);
+  console.log(`Edu-D API berjalan di http://localhost:${PORT}`);
 });
