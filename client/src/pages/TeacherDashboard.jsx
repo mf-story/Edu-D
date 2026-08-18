@@ -2869,13 +2869,13 @@ function MaterialsPanel({ subjectId }) {
             className="btn btn-primary btn-sm"
             onClick={() => setManageOpen(true)}
           >
-            + Kelola & Tambah Materi
+            + Tambah Materi
           </button>
         </div>
         <p className="muted tiny">
-          Penambahan &amp; perubahan materi kini dilakukan per pertemuan lewat
-          “Kelola acuan, indikator &amp; materi”, sekaligus dengan pemetaan
-          tujuan pembelajarannya.
+          Tambahkan materi baru lewat tombol di atas. Untuk mengubah acuan,
+          indikator, atau isi tiap materi, gunakan tombol “Kelola” pada masing-masing
+          materi di bawah.
         </p>
         <div className="stack">
           {groupMaterialsByMateri(materials, curriculum).map((g) => (
@@ -2884,8 +2884,17 @@ function MaterialsPanel({ subjectId }) {
                 <span className="materi-group-title">
                   {g.label ? `📚 ${g.label}` : "Tanpa Materi Pokok"}
                 </span>
-                <span className="materi-count">
-                  {g.pertemuan.length} pertemuan
+                <span className="materi-group-actions">
+                  <span className="materi-count">
+                    {g.pertemuan.length} pertemuan
+                  </span>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setManageOpen(true)}
+                    title="Kelola acuan, indikator & materi"
+                  >
+                    ✎ Kelola
+                  </button>
                 </span>
               </div>
               {g.pertemuan.map(([p, items]) => (
@@ -2908,7 +2917,7 @@ function MaterialsPanel({ subjectId }) {
           ))}
           {materials.length === 0 && (
             <p className="muted">
-              Belum ada materi. Klik “+ Kelola &amp; Tambah Materi”.
+              Belum ada materi. Klik “+ Tambah Materi”.
             </p>
           )}
         </div>
