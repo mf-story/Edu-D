@@ -1,7 +1,7 @@
 // =====================================================================
 // StudentDashboard.jsx — Pelajar: lihat materi, kumpulkan tugas, jadwal.
 // =====================================================================
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, Fragment } from "react";
 import { api } from "../api";
 import { MaterialBody, groupMaterialsByMateri, groupMaterialsByPertemuan, MateriSubMateriTags, fmtDateTime, AcuanBox } from "./TeacherDashboard.jsx";
 import ChatPanel from "../components/ChatPanel.jsx";
@@ -932,7 +932,7 @@ function StudentMaterials({ subjectId }) {
             <span className="materi-group-title">
               {g.label ? `📚 ${g.label}` : "Tanpa Materi Pokok"}
             </span>
-            <span className="materi-count">{g.pertemuan.length} pertemuan</span>
+            <span className="materi-count">{g.pertemuan.length} pembelajaran</span>
           </div>
           {g.pertemuan.map(([p, items]) => (
             <StudentPembelajaran
@@ -980,9 +980,22 @@ function StudentPembelajaran({ p, items, cur, indicators }) {
       </button>
       {open && (
         <>
-          <AcuanBox item={cur} indicators={indicators} hideSubmateri />
-          {items.map((m) => (
-            <details className="card material" key={m.id}>
+          <AcuanBox item={cur} indicators={indicators} hideSubmateri hideHeading />
+          {[...items]
+            .sort(
+              (a, b) =>
+                (Number(a.pertemuanKe) || 1) - (Number(b.pertemuanKe) || 1)
+            )
+            .map((m, idx, arr) => {
+              const ke = Number(m.pertemuanKe) || 1;
+              const showKe =
+                idx === 0 || (Number(arr[idx - 1].pertemuanKe) || 1) !== ke;
+              return (
+                <Fragment key={m.id}>
+                  {showKe && (
+                    <div className="pert-ke-head">Pertemuan {ke}</div>
+                  )}
+            <details className="card material">
               <summary className="material-summary">
                 <b>
                   <span className={`badge type-${m.type}`}>{m.type}</span>{" "}
@@ -1004,7 +1017,9 @@ function StudentPembelajaran({ p, items, cur, indicators }) {
               )}
               <Comments targetType="material" targetId={m.id} />
             </details>
-          ))}
+                </Fragment>
+              );
+            })}
         </>
       )}
     </div>

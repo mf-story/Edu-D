@@ -2667,6 +2667,30 @@ app.put("/api/subjects/:id", authenticate, requireRole("admin"), (req, res) => {
   ok(res, db.update("subjects", req.params.id, patch));
 });
 
+// Pengajar menetapkan daftar Materi Pokok (grup) untuk mapelnya. Grup boleh
+// kosong (tanpa pertemuan); pertemuan ditambah kemudian lewat "Kelola".
+// Materi pokok dipilih dari kurikulum aktif.
+app.put(
+  "/api/subjects/:id/materi-pokok",
+  authenticate,
+  requireRole("teacher", "admin"),
+  (req, res) => {
+    const subject = db.getById("subjects", req.params.id);
+    if (!subject) return bad(res, 404, "Mata pelajaran tidak ditemukan");
+    if (req.user.role === "teacher" && !isMemberOfSubject(req.user, subject))
+      return bad(res, 403, "Anda bukan pengajar mata pelajaran ini");
+    const raw = Array.isArray(req.body && req.body.materiPokok)
+      ? req.body.materiPokok
+      : [];
+    const list = [];
+    for (const v of raw) {
+      const s = String(v || "").trim();
+      if (s && !list.includes(s)) list.push(s);
+    }
+    ok(res, db.update("subjects", req.params.id, { materiPokok: list }));
+  }
+);
+
 app.delete("/api/subjects/:id", authenticate, requireRole("admin"), (req, res) => {
   const subject = db.getById("subjects", req.params.id);
   if (!subject) return bad(res, 404, "Mata pelajaran tidak ditemukan");
@@ -2910,6 +2934,7 @@ app.post(
       type, // text | image | video | presentation | document | link
       content: content || "",
       pertemuan: Math.max(1, parseInt(pertemuan, 10) || 1),
+      pertemuanKe: Math.max(1, parseInt(req.body.pertemuanKe, 10) || 1),
       submateri: parseFormArr(req.body.submateri),
       // Materi baru belum dibagikan; guru menekan "Bagikan" agar terlihat siswa.
       active: false,
@@ -2947,6 +2972,8 @@ app.put(
     if (content !== undefined) patch.content = content;
     if (pertemuan !== undefined)
       patch.pertemuan = Math.max(1, parseInt(pertemuan, 10) || 1);
+    if (req.body.pertemuanKe !== undefined)
+      patch.pertemuanKe = Math.max(1, parseInt(req.body.pertemuanKe, 10) || 1);
     if (req.body.submateri !== undefined)
       patch.submateri = parseFormArr(req.body.submateri);
     if (req.body.checkQuestions !== undefined)

@@ -148,6 +148,12 @@ export const api = {
   getSubject: (id) => request(`/subjects/${id}`),
   createSubject: (s) => request("/subjects", { method: "POST", body: s }),
   updateSubject: (id, s) => request(`/subjects/${id}`, { method: "PUT", body: s }),
+  // Pengajar menetapkan daftar Materi Pokok (grup) mapelnya
+  setSubjectMateriPokok: (id, materiPokok) =>
+    request(`/subjects/${id}/materi-pokok`, {
+      method: "PUT",
+      body: { materiPokok },
+    }),
   deleteSubject: (id) => request(`/subjects/${id}`, { method: "DELETE" }),
 
   // Schedules

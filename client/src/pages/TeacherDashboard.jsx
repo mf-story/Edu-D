@@ -1130,7 +1130,7 @@ function CurriculumReference({ subjectId, withMaterials = false, onManage }) {
 }
 
 // Modal pemetaan indikator kurikulum aktif ke tiap pertemuan.
-function CurriculumMapper({ subjectId, active, onClose, withMaterials = false }) {
+function CurriculumMapper({ subjectId, active, onClose, withMaterials = false, initialMateri = null, closeOnAdd = false, editItem = null }) {
   const emptyForm = {
     pertemuan: 1,
     topic: "",
@@ -1167,10 +1167,27 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false })
         setItems(list);
         setEditingId((cur) => {
           if (cur) return cur;
+          // Mode edit: langsung muat pembelajaran yang dipilih.
+          if (editItem) {
+            setForm({
+              pertemuan: editItem.pertemuan,
+              topic: editItem.topic || "",
+              description: editItem.description || "",
+              indicators: editItem.indicators || [],
+              materiPokok: editItem.materiPokok || [],
+              submateri: editItem.submateri || [],
+              tema: editItem.tema || [],
+            });
+            return editItem.id;
+          }
           const next = list.length
             ? Math.max(...list.map((i) => i.pertemuan || 0)) + 1
             : 1;
-          setForm({ ...emptyForm, pertemuan: next });
+          setForm({
+            ...emptyForm,
+            pertemuan: next,
+            materiPokok: initialMateri ? [...initialMateri] : [],
+          });
           return null;
         });
       })
@@ -1270,6 +1287,11 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false })
     try {
       if (editingId) await api.updateCurriculum(editingId, payload);
       else await api.createCurriculum({ subjectId, ...payload });
+      // Tutup pop-up setelah menambah/mengubah pembelajaran bila diminta.
+      if (closeOnAdd) {
+        onClose();
+        return;
+      }
       resetForm();
       load();
     } catch (err) {
@@ -1350,13 +1372,13 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false })
         {error && <div className="alert">{error}</div>}
         <p className="muted tiny">
           {withMaterials
-            ? "Petakan indikator kurikulum aktif ke tiap pertemuan, lalu tambahkan materinya langsung di pertemuan yang sama."
-            : "Petakan indikator kurikulum aktif ke tiap pertemuan. Indikator inilah yang menjadi acuan saat membuat Materi, Tugas, dan Kuis."}
+            ? "Petakan indikator kurikulum aktif ke tiap pembelajaran, lalu tambahkan materinya langsung di pembelajaran yang sama."
+            : "Petakan indikator kurikulum aktif ke tiap pembelajaran. Indikator inilah yang menjadi acuan saat membuat Materi, Tugas, dan Kuis."}
         </p>
         <div className="grid-2">
           <form onSubmit={save} className="stack">
             <label>
-              Pertemuan ke-
+              Pembelajaran ke-
               <input
                 type="number"
                 min="1"
@@ -1393,8 +1415,8 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false })
                 title="Materi Pokok"
                 hint={
                   selectedMateriJP > 0
-                    ? `Materi pokok terpilih otomatis menjadi topik pertemuan ini · Total ${selectedMateriJP} JP.`
-                    : "Materi pokok terpilih otomatis menjadi topik/judul pertemuan ini."
+                    ? `Materi pokok terpilih otomatis menjadi topik pembelajaran ini · Total ${selectedMateriJP} JP.`
+                    : "Materi pokok terpilih otomatis menjadi topik/judul pembelajaran ini."
                 }
                 field="materiPokok"
                 options={active.materiPokok}
@@ -1407,7 +1429,7 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false })
             {submateriOptions.length > 0 && (
               <ChoicePicker
                 title="Sub-Materi"
-                hint="Rincian submateri yang dibahas pada pertemuan ini (dari materi pokok terpilih)."
+                hint="Rincian submateri yang dibahas pada pembelajaran ini (dari materi pokok terpilih)."
                 field="submateri"
                 options={submateriOptions}
                 selected={form.submateri}
@@ -1540,7 +1562,7 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false })
             </div>
             <div className="btn-group">
               <button className="btn btn-primary" type="submit">
-                {editingId ? "Simpan perubahan" : "Tambah pertemuan"}
+                {editingId ? "Simpan perubahan" : "Tambah pembelajaran"}
               </button>
               {editingId && (
                 <button
@@ -1661,6 +1683,9 @@ function MaterialManager({
   onChange,
   submateriOptions = [],
   subBahanMap = {},
+  hideHead = false,
+  autoCreate = 0,
+  formAsModal = false,
 }) {
   const [type, setType] = useState("text");
   const [title, setTitle] = useState("");
@@ -1675,6 +1700,7 @@ function MaterialManager({
   const [checkQuestions, setCheckQuestions] = useState([]);
   const [askReflection, setAskReflection] = useState(false);
   const [reflectionPrompt, setReflectionPrompt] = useState("");
+  const [pertemuanKe, setPertemuanKe] = useState(1);
   // Submateri pertemuan ini yang memiliki bahan ajar dari kurikulum.
   const bahanOptions = (submateriOptions || []).filter((n) => subBahanMap[n]);
 
@@ -1688,6 +1714,12 @@ function MaterialManager({
     setCheckQuestions([]);
     setAskReflection(false);
     setReflectionPrompt("");
+    // Nomor "Pertemuan ke-" berikutnya untuk pembelajaran ini.
+    setPertemuanKe(
+      materials.length
+        ? Math.max(...materials.map((m) => Number(m.pertemuanKe) || 1)) + 1
+        : 1
+    );
     setError("");
   }
   function openCreate() {
@@ -1712,6 +1744,7 @@ function MaterialManager({
     );
     setAskReflection(!!m.askReflection);
     setReflectionPrompt(m.reflectionPrompt || "");
+    setPertemuanKe(Number(m.pertemuanKe) || 1);
     setError("");
     setShowForm(true);
   }
@@ -1798,6 +1831,7 @@ function MaterialManager({
       fd.append("type", type);
       fd.append("content", content);
       fd.append("pertemuan", pertemuan);
+      fd.append("pertemuanKe", pertemuanKe);
       fd.append("submateri", JSON.stringify(submateriOptions || []));
       fd.append("checkQuestions", JSON.stringify(cleanQuestions));
       fd.append("askReflection", askReflection ? "true" : "false");
@@ -1832,30 +1866,48 @@ function MaterialManager({
     onChange && onChange();
   }
 
+  // Buka form tambah materi otomatis saat dipicu dari luar (tombol + Materi).
+  useEffect(() => {
+    if (autoCreate) openCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCreate]);
+
   const needsFile = FILE_TYPES.includes(type);
   const needsLink = type === "link";
   const isVideo = type === "video";
 
   return (
     <div className="pert-materials">
-      <div className="pert-materials-head">
-        <span className="label-strong">📎 Materi ({materials.length})</span>
-        {!showForm && (
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            onClick={openCreate}
-          >
-            + Tambah materi
-          </button>
-        )}
-      </div>
-      {materials.length === 0 && !showForm && (
-        <p className="muted tiny m0">Belum ada materi untuk pertemuan ini.</p>
+      {!hideHead && (
+        <div className="pert-materials-head">
+          <span className="label-strong">📎 Materi ({materials.length})</span>
+          {!showForm && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={openCreate}
+            >
+              + Tambah materi
+            </button>
+          )}
+        </div>
       )}
-      {materials.map((m) => (
-        <div className="pert-material-item" key={m.id}>
-          <div className="row-between">
+      {materials.length === 0 && !showForm && (
+        <p className="muted tiny m0">Belum ada materi untuk pembelajaran ini.</p>
+      )}
+      {[...materials]
+        .sort(
+          (a, b) => (Number(a.pertemuanKe) || 1) - (Number(b.pertemuanKe) || 1)
+        )
+        .map((m, idx, arr) => {
+          const ke = Number(m.pertemuanKe) || 1;
+          const showKe =
+            idx === 0 || (Number(arr[idx - 1].pertemuanKe) || 1) !== ke;
+          return (
+            <Fragment key={m.id}>
+              {showKe && <div className="pert-ke-head">Pertemuan {ke}</div>}
+              <div className="pert-material-item">
+                <div className="row-between">
             <span className="pert-material-title">
               <span className={`badge type-${m.type}`}>{m.type}</span> {m.title}
               {m.active === false && (
@@ -1931,11 +1983,42 @@ function MaterialManager({
               </button>
             </div>
           </div>
-        </div>
-      ))}
+              </div>
+            </Fragment>
+          );
+        })}
       {showForm && (
-        <form onSubmit={save} className="form pert-material-form">
+        <div className={formAsModal ? "modal-overlay" : "pert-material-form-wrap"}>
+        <form
+          onSubmit={save}
+          className={`form pert-material-form${
+            formAsModal ? " modal modal-form" : ""
+          }`}
+        >
+          {formAsModal && (
+            <div className="modal-head">
+              <h3 className="m0">{editingId ? "Ubah Materi" : "Tambah Materi"}</h3>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => {
+                  resetForm();
+                  setShowForm(false);
+                }}
+              >
+                Tutup
+              </button>
+            </div>
+          )}
           {error && <div className="alert">{error}</div>}
+          <label>Pertemuan ke-</label>
+          <input
+            type="number"
+            min="1"
+            value={pertemuanKe}
+            onChange={(e) => setPertemuanKe(e.target.value)}
+            required
+          />
           <label>Jenis materi</label>
           <select value={type} onChange={(e) => setType(e.target.value)}>
             {MATERIAL_TYPES.map((t) => (
@@ -2137,6 +2220,7 @@ function MaterialManager({
             </button>
           </div>
         </form>
+        </div>
       )}
     </div>
   );
@@ -2326,7 +2410,7 @@ export function fmtDateTime(value) {
 
 // Kotak acuan kurikulum (topik/materi pokok, tema projek, indikator/tujuan)
 // yang ditempelkan pada tiap pembelajaran di daftar materi — guru & siswa.
-export function AcuanBox({ item, indicators, hideSubmateri }) {
+export function AcuanBox({ item, indicators, hideSubmateri, hideHeading = false }) {
   if (!item) return null;
   const objectives = item.indicators || [];
   const tema = (item.tema || []).filter(Boolean);
@@ -2342,9 +2426,11 @@ export function AcuanBox({ item, indicators, hideSubmateri }) {
   const objGroups = categorizeObjectives(objectives, indicators);
   return (
     <div className="lesson-obj lesson-obj-inline">
-      <div className="lesson-obj-head">
-        <span className="lesson-obj-label">📋 Acuan Kurikulum</span>
-      </div>
+      {!hideHeading && (
+        <div className="lesson-obj-head">
+          <span className="lesson-obj-label">📋 Acuan Kurikulum</span>
+        </div>
+      )}
       {item.description && (
         <div className="muted tiny">{item.description}</div>
       )}
@@ -2664,15 +2750,14 @@ function TeacherLessonGroup({
   items,
   cur,
   indicators,
-  activeLesson,
-  onToggleLesson,
-  onToggleActive,
-  onToggleSelfLearn,
-  onToggleComplete,
-  onEdit,
-  onDelete,
+  subjectId,
+  subBahanMap = {},
+  onChange,
+  onEditLesson,
+  onDeleteLesson,
 }) {
   const [open, setOpen] = useState(false);
+  const [autoCreate, setAutoCreate] = useState(0);
   const submateri = (cur?.submateri || []).filter(Boolean);
   const done = items.length > 0 && items.every((m) => m.completed);
   return (
@@ -2686,7 +2771,6 @@ function TeacherLessonGroup({
         >
           <span className="pertemuan-caret">{open ? "▾" : "▸"}</span>
           <span className="pertemuan-title">Pembelajaran {p}</span>
-          {!activeLesson && <span className="badge badge-off">Nonaktif</span>}
           {done && (
             <span className="badge badge-done pertemuan-done">✓ Selesai</span>
           )}
@@ -2700,107 +2784,130 @@ function TeacherLessonGroup({
             </span>
           )}
         </button>
-        <button
-          type="button"
-          className={`btn btn-sm ${activeLesson ? "btn-ghost" : "btn-primary"}`}
-          onClick={onToggleLesson}
-          title={
-            activeLesson
-              ? "Sembunyikan pembelajaran ini dari siswa"
-              : "Aktifkan & beri tahu siswa"
-          }
-        >
-          {activeLesson ? "Nonaktifkan" : "Aktifkan"}
-        </button>
+        <span className="pertemuan-actions btn-group">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              setOpen(true);
+              setAutoCreate((c) => c + 1);
+            }}
+            title="Tambah materi pada pembelajaran ini"
+          >
+            + Materi
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => onEditLesson && onEditLesson(cur)}
+            title="Ubah pembelajaran ini"
+          >
+            ✏️ Edit
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger btn-sm"
+            onClick={() => onDeleteLesson && onDeleteLesson(p, cur, items)}
+            title="Hapus pembelajaran ini"
+          >
+            🗑 Hapus
+          </button>
+        </span>
       </div>
       {open && (
         <>
-          <AcuanBox item={cur} indicators={indicators} hideSubmateri />
-          {items.map((m) => (
-            <details className="material" key={m.id}>
-              <summary className="row-between material-summary">
-                <b>
-                  <span className={`badge type-${m.type}`}>{m.type}</span>{" "}
-                  {m.title}
-                  {m.active === false && (
-                    <span className="badge badge-off">Belum dibagikan</span>
-                  )}
-                  {m.selfLearn === false && (
-                    <span
-                      className="badge badge-off"
-                      title="Disembunyikan dari Belajar Mandiri"
-                    >
-                      🚫 Belajar Mandiri
-                    </span>
-                  )}
-                  {m.completed && (
-                    <span className="badge badge-done">✓ Selesai</span>
-                  )}
-                </b>
-                <div
-                  className="btn-group btn-group-icons"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    className={`btn btn-sm btn-icon ${
-                      m.active === false ? "btn-primary" : "btn-ghost"
-                    }`}
-                    onClick={() => onToggleActive(m)}
-                    title={
-                      m.active === false
-                        ? "Bagikan materi ini ke siswa"
-                        : "Sembunyikan materi ini dari siswa"
-                    }
-                  >
-                    {m.active === false ? "📢" : "🔕"}
-                  </button>
-                  <button
-                    className={`btn btn-sm btn-icon ${
-                      m.selfLearn === false ? "btn-primary" : "btn-ghost"
-                    }`}
-                    onClick={() => onToggleSelfLearn(m)}
-                    title={
-                      m.selfLearn === false
-                        ? "Tampilkan di Belajar Mandiri"
-                        : "Sembunyikan dari Belajar Mandiri"
-                    }
-                  >
-                    🎯
-                  </button>
-                  <button
-                    className={`btn btn-sm btn-icon ${
-                      m.completed ? "btn-ghost" : "btn-primary"
-                    }`}
-                    onClick={() => onToggleComplete(m)}
-                    title={m.completed ? "Batalkan selesai" : "Tandai selesai"}
-                  >
-                    {m.completed ? "↺" : "✓"}
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm btn-icon"
-                    onClick={onEdit}
-                    title="Ubah materi"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm btn-icon"
-                    onClick={() => onDelete(m.id)}
-                    title="Hapus materi"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </summary>
-              <MaterialBody m={m} />
-              <div className="muted tiny">
-                oleh {m.teacherName} · {fmtDateTime(m.createdAt)}
-              </div>
-              <Comments targetType="material" targetId={m.id} />
-            </details>
-          ))}
+          <AcuanBox item={cur} indicators={indicators} hideSubmateri hideHeading />
+          <MaterialManager
+            subjectId={subjectId}
+            pertemuan={p}
+            materials={items}
+            onChange={onChange}
+            submateriOptions={submateri}
+            subBahanMap={subBahanMap}
+            hideHead
+            autoCreate={autoCreate}
+            formAsModal
+          />
         </>
       )}
+    </div>
+  );
+}
+
+// Modal pemilih Materi Pokok (dari kurikulum aktif) untuk membuat grup materi.
+// Materi Pokok baru dibuat lewat Master Kurikulum (admin); di sini hanya memilih.
+function MateriPokokPicker({ options, selected, onClose, onSave }) {
+  const [chosen, setChosen] = useState(() => new Set(selected || []));
+  const [busy, setBusy] = useState(false);
+  const list = (options || []).filter(Boolean);
+  const toggle = (name) =>
+    setChosen((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  async function save() {
+    setBusy(true);
+    try {
+      await onSave([...chosen]);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal"
+        style={{ maxWidth: 560 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-head">
+          <h3 className="m0">Tambah Materi Pokok</h3>
+          <button className="btn btn-sm" onClick={onClose}>
+            Tutup
+          </button>
+        </div>
+        <p className="muted tiny">
+          Pilih Materi Pokok dari kurikulum aktif. Materi Pokok baru ditambahkan
+          lewat Master Kurikulum (admin).
+        </p>
+        {list.length === 0 ? (
+          <p className="muted">
+            Belum ada Materi Pokok pada kurikulum aktif kelas ini.
+          </p>
+        ) : (
+          <div className="indicator-check-grid">
+            {list.map((name) => (
+              <label
+                className={`indicator-check${
+                  chosen.has(name) ? " is-checked" : ""
+                }`}
+                key={name}
+              >
+                <input
+                  type="checkbox"
+                  checked={chosen.has(name)}
+                  onChange={() => toggle(name)}
+                />
+                <span>{name}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        <div className="btn-group" style={{ marginTop: "0.8rem" }}>
+          <button
+            className="btn btn-primary"
+            onClick={save}
+            disabled={busy || list.length === 0}
+          >
+            {busy ? "Menyimpan…" : "Simpan"}
+          </button>
+          <button className="btn btn-ghost" onClick={onClose}>
+            Batal
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2809,6 +2916,10 @@ function MaterialsPanel({ subjectId }) {
   const [materials, setMaterials] = useState([]);
   const [lessonStates, setLessonStates] = useState([]);
   const [manageOpen, setManageOpen] = useState(false);
+  const [manageMateri, setManageMateri] = useState(null);
+  const [manageEditItem, setManageEditItem] = useState(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [savedMateri, setSavedMateri] = useState([]);
   const [active, setActive] = useState(null);
   const [curriculum, setCurriculum] = useState([]);
 
@@ -2819,11 +2930,17 @@ function MaterialsPanel({ subjectId }) {
     api.activeCurriculum(subjectId).then(setActive).catch(() => setActive(null));
   const loadCurriculum = () =>
     api.listCurriculum(subjectId).then(setCurriculum).catch(() => setCurriculum([]));
+  const loadSavedMateri = () =>
+    api
+      .getSubject(subjectId)
+      .then((s) => setSavedMateri(Array.isArray(s.materiPokok) ? s.materiPokok : []))
+      .catch(() => setSavedMateri([]));
   useEffect(() => {
     load();
     loadStates();
     loadActive();
     loadCurriculum();
+    loadSavedMateri();
   }, [subjectId]);
 
   const curFor = (p) =>
@@ -2860,25 +2977,120 @@ function MaterialsPanel({ subjectId }) {
     load();
   }
 
+  // Buka form tambah pertemuan untuk sebuah Materi Pokok (materi pokok terpilih).
+  function addPertemuan(g) {
+    setManageEditItem(null);
+    setManageMateri(g.materi && g.materi.length ? g.materi : [g.label]);
+    setManageOpen(true);
+  }
+  // Buka form untuk mengubah sebuah pembelajaran (pertemuan) tertentu.
+  function editLesson(cur) {
+    if (!cur) return;
+    setManageMateri(null);
+    setManageEditItem(cur);
+    setManageOpen(true);
+  }
+  // Hapus sebuah pembelajaran (pertemuan) beserta materinya.
+  async function deleteLesson(p, cur, items) {
+    if (!confirm(`Hapus Pembelajaran ${p} beserta materinya?`)) return;
+    for (const m of items || []) {
+      await api.deleteMaterial(m.id).catch(() => {});
+    }
+    if (cur) await api.deleteCurriculum(cur.id).catch(() => {});
+    load();
+    loadCurriculum();
+    loadStates();
+  }
+  // Hapus sebuah Materi Pokok beserta seluruh pertemuan & materinya.
+  async function deleteMateriPokok(g) {
+    const hasPertemuan = g.pertemuan.length > 0;
+    const msg = hasPertemuan
+      ? `Hapus Materi Pokok "${g.label}" beserta ${g.pertemuan.length} pertemuan & materinya?`
+      : `Hapus Materi Pokok "${g.label}"?`;
+    if (!confirm(msg)) return;
+    // Hapus materi & pemetaan kurikulum tiap pertemuan pada grup ini.
+    for (const [p] of g.pertemuan) {
+      for (const m of materials.filter(
+        (m) => Number(m.pertemuan) === Number(p)
+      )) {
+        await api.deleteMaterial(m.id).catch(() => {});
+      }
+      const cur = curFor(p);
+      if (cur) await api.deleteCurriculum(cur.id).catch(() => {});
+    }
+    // Keluarkan dari daftar Materi Pokok mapel.
+    const names = new Set(g.materi && g.materi.length ? g.materi : [g.label]);
+    const next = savedMateri.filter((n) => !names.has(n));
+    await api.setSubjectMateriPokok(subjectId, next).catch(() => {});
+    load();
+    loadCurriculum();
+    loadStates();
+    loadSavedMateri();
+  }
+
+  // Grup dibangun dari kurikulum (tiap pertemuan) + Materi Pokok pilihan guru.
+  // Materi dilampirkan ke pertemuannya. Grup tanpa Materi Pokok tak ditampilkan.
+  const materialsByP = new Map();
+  for (const [p, items] of groupMaterialsByPertemuan(materials))
+    materialsByP.set(Number(p), items);
+  const groupsMap = new Map();
+  for (const c of curriculum) {
+    const materi = (c.materiPokok || []).filter(Boolean);
+    const label = materi.length ? materi.join(" · ") : c.topic || "";
+    if (!label) continue;
+    if (!groupsMap.has(label))
+      groupsMap.set(label, { key: label, label, materi, pertemuan: [] });
+    groupsMap
+      .get(label)
+      .pertemuan.push([c.pertemuan, materialsByP.get(Number(c.pertemuan)) || []]);
+  }
+  for (const name of savedMateri) {
+    if (name && !groupsMap.has(name))
+      groupsMap.set(name, { key: name, label: name, materi: [name], pertemuan: [] });
+  }
+  const mergedGroups = [...groupsMap.values()]
+    .map((g) => ({
+      ...g,
+      pertemuan: [...g.pertemuan].sort((a, b) => a[0] - b[0]),
+    }))
+    .sort((a, b) => {
+      const pa = a.pertemuan[0]?.[0] ?? Infinity;
+      const pb = b.pertemuan[0]?.[0] ?? Infinity;
+      return pa - pb;
+    });
+  // Jumlah materi yang benar-benar tampil (di bawah grup Materi Pokok).
+  const visibleMaterialCount = mergedGroups.reduce(
+    (sum, g) =>
+      sum + g.pertemuan.reduce((s, [, items]) => s + items.length, 0),
+    0
+  );
+  // Peta submateri → bahan ajar (untuk isi otomatis saat menambah materi).
+  const subBahanMap = {};
+  (active?.materiDetail || []).forEach((m) =>
+    (m.submateri || []).forEach((s) => {
+      if (s && s.nama && s.bahanAjar) subBahanMap[s.nama] = s.bahanAjar;
+    })
+  );
+
   return (
     <>
       <div className="card">
         <div className="row-between">
-          <h3>Materi Kelas ({materials.length})</h3>
+          <h3>Materi Kelas ({visibleMaterialCount})</h3>
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => setManageOpen(true)}
+            onClick={() => setPickerOpen(true)}
           >
-            + Tambah Materi
+            + Tambah Materi Pokok
           </button>
         </div>
         <p className="muted tiny">
-          Tambahkan materi baru lewat tombol di atas. Untuk mengubah acuan,
-          indikator, atau isi tiap materi, gunakan tombol “Kelola” pada masing-masing
-          materi di bawah.
+          Pilih Materi Pokok dari kurikulum lewat tombol di atas untuk membuat
+          grup. Tambah pembelajaran dengan tombol “+ Pembelajaran”, atau hapus
+          Materi Pokok dengan tombol “🗑 Hapus” pada masing-masing grup.
         </p>
         <div className="stack">
-          {groupMaterialsByMateri(materials, curriculum).map((g) => (
+          {mergedGroups.map((g) => (
             <div className="materi-group" key={g.key || "__no-materi__"}>
               <div className="materi-group-head">
                 <span className="materi-group-title">
@@ -2886,17 +3098,29 @@ function MaterialsPanel({ subjectId }) {
                 </span>
                 <span className="materi-group-actions">
                   <span className="materi-count">
-                    {g.pertemuan.length} pertemuan
+                    {g.pertemuan.length} pembelajaran
                   </span>
                   <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setManageOpen(true)}
-                    title="Kelola acuan, indikator & materi"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => addPertemuan(g)}
+                    title="Tambah pembelajaran pada Materi Pokok ini"
                   >
-                    ✎ Kelola
+                    + Pembelajaran
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => deleteMateriPokok(g)}
+                    title="Hapus Materi Pokok ini"
+                  >
+                    🗑 Hapus
                   </button>
                 </span>
               </div>
+              {g.pertemuan.length === 0 && (
+                <p className="muted tiny materi-group-empty">
+                  Belum ada pembelajaran. Klik “+ Pembelajaran” untuk menambah.
+                </p>
+              )}
               {g.pertemuan.map(([p, items]) => (
                 <TeacherLessonGroup
                   key={p}
@@ -2904,31 +3128,48 @@ function MaterialsPanel({ subjectId }) {
                   items={items}
                   cur={curFor(p)}
                   indicators={active?.indicators}
-                  activeLesson={isLessonActive(p)}
-                  onToggleLesson={() => toggleLesson(p)}
-                  onToggleActive={toggleActive}
-                  onToggleSelfLearn={toggleSelfLearn}
-                  onToggleComplete={toggleComplete}
-                  onEdit={() => setManageOpen(true)}
-                  onDelete={del}
+                  subjectId={subjectId}
+                  subBahanMap={subBahanMap}
+                  onChange={() => {
+                    load();
+                    loadCurriculum();
+                  }}
+                  onEditLesson={editLesson}
+                  onDeleteLesson={deleteLesson}
                 />
               ))}
             </div>
           ))}
-          {materials.length === 0 && (
+          {mergedGroups.length === 0 && (
             <p className="muted">
-              Belum ada materi. Klik “+ Tambah Materi”.
+              Belum ada Materi Pokok. Klik “+ Tambah Materi Pokok”.
             </p>
           )}
         </div>
       </div>
+      {pickerOpen && (
+        <MateriPokokPicker
+          options={active?.materiPokok || []}
+          selected={savedMateri}
+          onClose={() => setPickerOpen(false)}
+          onSave={async (list) => {
+            await api.setSubjectMateriPokok(subjectId, list);
+            setPickerOpen(false);
+            loadSavedMateri();
+          }}
+        />
+      )}
       {manageOpen && (
         <CurriculumMapper
           subjectId={subjectId}
           active={active}
-          withMaterials
+          initialMateri={manageMateri}
+          editItem={manageEditItem}
+          closeOnAdd
           onClose={() => {
             setManageOpen(false);
+            setManageMateri(null);
+            setManageEditItem(null);
             load();
             loadStates();
             loadCurriculum();
