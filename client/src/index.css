@@ -1109,9 +1109,25 @@ h3 {
     padding: 0.4rem 0.55rem;
     font-size: 1.08rem;
   }
-  /* Header "Pembelajaran" (guru): sejajarkan tombol aksi ke atas saat judul membungkus */
+  /* Header "Pembelajaran" (guru): susun vertikal di HP agar judul & tag sub-materi
+     mendapat lebar penuh (tak terjepit tombol), tombol aksi pindah ke bawah. */
   .pertemuan-head {
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+  .pertemuan-head-btn {
+    width: 100%;
+  }
+  .pertemuan-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .pertemuan-actions .btn {
+    flex: 1 1 auto;
+  }
+  .ref-tag {
+    overflow-wrap: anywhere;
   }
   .modal-head h3 {
     font-size: 1.02rem;
