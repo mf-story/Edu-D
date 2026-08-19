@@ -1687,6 +1687,7 @@ function MaterialManager({
   subBahanMap = {},
   hideHead = false,
   autoCreate = 0,
+  onAutoCreateDone,
   formAsModal = false,
 }) {
   const [type, setType] = useState("text");
@@ -1873,8 +1874,13 @@ function MaterialManager({
   }
 
   // Buka form tambah materi otomatis saat dipicu dari luar (tombol + Materi).
+  // Setelah dibuka, minta induk mereset pemicu agar remount (buka/tutup grup)
+  // tidak ikut membuka form.
   useEffect(() => {
-    if (autoCreate) openCreate();
+    if (autoCreate) {
+      openCreate();
+      onAutoCreateDone && onAutoCreateDone();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoCreate]);
 
@@ -2834,6 +2840,7 @@ function TeacherLessonGroup({
             subBahanMap={subBahanMap}
             hideHead
             autoCreate={autoCreate}
+            onAutoCreateDone={() => setAutoCreate(0)}
             formAsModal
           />
         </>
