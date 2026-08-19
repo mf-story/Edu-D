@@ -4,6 +4,7 @@
 import { useEffect, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { api } from "../api";
+import { useBackClose } from "../useBackClose";
 import ChatPanel from "../components/ChatPanel.jsx";
 import AnnouncementsBanner from "../components/AnnouncementsBanner.jsx";
 import Comments from "../components/Comments.jsx";
@@ -1147,6 +1148,7 @@ function CurriculumMapper({ subjectId, active, onClose, withMaterials = false, i
   const [search, setSearch] = useState("");
   const [materials, setMaterials] = useState([]);
   const indicators = active?.indicators || [];
+  useBackClose(true, onClose);
 
   function loadMaterials() {
     if (!withMaterials) return;
@@ -1703,6 +1705,10 @@ function MaterialManager({
   const [pertemuanKe, setPertemuanKe] = useState(1);
   // Submateri pertemuan ini yang memiliki bahan ajar dari kurikulum.
   const bahanOptions = (submateriOptions || []).filter((n) => subBahanMap[n]);
+  useBackClose(formAsModal && showForm, () => {
+    resetForm();
+    setShowForm(false);
+  });
 
   function resetForm() {
     setEditingId(null);
@@ -2842,6 +2848,7 @@ function MateriPokokPicker({ options, selected, onClose, onSave }) {
   const [chosen, setChosen] = useState(() => new Set(selected || []));
   const [busy, setBusy] = useState(false);
   const list = (options || []).filter(Boolean);
+  useBackClose(true, onClose);
   const toggle = (name) =>
     setChosen((prev) => {
       const next = new Set(prev);
