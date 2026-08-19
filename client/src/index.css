@@ -1126,6 +1126,11 @@ h3 {
   .pertemuan-actions .btn {
     flex: 1 1 auto;
   }
+  /* Tombol ikon (Edit/Hapus) tetap ringkas, tak ikut melar seperti "+ Materi" */
+  .pertemuan-actions .btn-icon {
+    flex: 0 0 auto;
+    min-width: 44px;
+  }
   .ref-tag {
     overflow-wrap: anywhere;
   }
