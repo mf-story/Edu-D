@@ -3089,7 +3089,7 @@ function MaterialsPanel({ subjectId }) {
         <p className="muted tiny">
           Pilih Materi Pokok dari kurikulum lewat tombol di atas untuk membuat
           grup. Tambah pembelajaran dengan tombol “+ Pembelajaran”, atau hapus
-          Materi Pokok dengan tombol “🗑 Hapus” pada masing-masing grup.
+          Materi Pokok dengan tombol “🗑” pada masing-masing grup.
         </p>
         <div className="stack">
           {mergedGroups.map((g) => (
@@ -3110,11 +3110,12 @@ function MaterialsPanel({ subjectId }) {
                     + Pembelajaran
                   </button>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-danger btn-sm btn-icon"
                     onClick={() => deleteMateriPokok(g)}
                     title="Hapus Materi Pokok ini"
+                    aria-label="Hapus Materi Pokok ini"
                   >
-                    🗑 Hapus
+                    🗑
                   </button>
                 </span>
               </div>
